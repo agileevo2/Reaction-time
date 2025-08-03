@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Alphatek Reaction Time</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Alphatek Colour System */
+            --canvas-bg: #0A0A0C;
+            --primary-accent: #F6B45E;
+            --panel-bg: #141416;
+            --text-primary: #E8E8EA;
+            --text-secondary: #b0b0b2;
+            
+            /* State Colours */
+            --bg-wait: #2b87d1;
+            --bg-cue: #85FFB6;
+            --fg-cue: #0A0A0C;
+            --bg-early: #FF3D3D;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--canvas-bg);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        #app-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+        }
+
+        /* --- Test Area --- */
+        #test-area {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 100ms ease-in-out, opacity 300ms ease-in-out;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        
+        #test-area.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Backgrounds for test states */
+        .bg-start, .bg-wait { background-color: var(--bg-wait); }
+        .bg-cue { background-color: var(--bg-cue); }
+        .bg-early { background-color: var(--bg-early); }
+
+        #main-text, #sub-text {
+            transition: opacity 200ms ease-in-out;
+        }
+
+        #main-text {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .bg-cue #main-text {
+            color: var(--fg-cue);
+        }
+
+        #sub-text {
+            font-size: 1.1rem;
+            margin-top: 1rem;
+            opacity: 0.8;
+        }
+        
+        .bg-cue #sub-text {
+            color: var(--fg-cue);
+        }
+
+        .fade-out {
+            opacity: 0 !important;
+        }
+
+        /* --- Results Screen --- */
+        #results-screen {
+            background-color: var(--panel-bg);
+            padding: 32px;
+            border-radius: 16px;
+            text-align: center;
+            width: 90%;
+            max-width: 380px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUpFadeIn 400ms 300ms ease-out forwards;
+        }
+        
+        #results-screen.hidden {
+            display: none;
+        }
+
+        @keyframes slideUpFadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #results-screen h2 {
+            margin-top: 0;
+            font-weight: 600;
+        }
+        
+        #final-median {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--primary-accent);
+            margin: 8px 0;
+        }
+        
+        #results-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 16px 0 24px 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        #results-list li {
+            background-color: #2a2a2c;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+        
+        #retest-button {
+            background-color: var(--primary-accent);
+            color: var(--canvas-bg);
+            padding: 14px 32px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 150ms ease;
+        }
+        
+        #retest-button:hover {
+            background-color: rgba(246, 180, 94, 0.8);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        
+        <!-- Main interactive area for the test -->
+        <div id="test-area">
+            <h1 id="main-text"></h1>
+            <p id="sub-text"></p>
+        </div>
+        
+        <!-- Hidden report screen -->
+        <div id="results-screen" class="hidden">
+            <h2>Results</h2>
+            <div id="final-median"></div>
+            <p style="color: var(--text-secondary); margin-top: 0;">Median Time</p>
+            <ul id="results-list"></ul>
+            <button id="retest-button">Test Again</button>
+        </div>
+
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // UI Elements
+        const testArea = document.getElementById('test-area');
+        const mainText = document.getElementById('main-text');
+        const subText = document.getElementById('sub-text');
+        
+        const resultsScreen = document.getElementById('results-screen');
+        const finalMedianDisplay = document.getElementById('final-median');
+        const resultsList = document.getElementById('results-list');
+        const retestButton = document.getElementById('retest-button');
+
+        // Test Parameters
+        const TOTAL_TRIALS = 5;
+        const MIN_INTERVAL = 1500;
+        const MAX_INTERVAL = 4000;
+
+        // App State
+        let state = 'start';
+        let reactionTimes = [];
+        let timeoutId = null;
+        let stimulusTime = 0;
+
+        /**
+         * Smoothly updates the on-screen text with a fade effect.
+         * @param {string} main - The new main text.
+         * @param {string} sub - The new sub text.
+         */
+        function updateText(main, sub) {
+            return new Promise(resolve => {
+                mainText.classList.add('fade-out');
+                subText.classList.add('fade-out');
+                
+                setTimeout(() => {
+                    mainText.textContent = main;
+                    subText.textContent = sub;
+                    mainText.classList.remove('fade-out');
+                    subText.classList.remove('fade-out');
+                    resolve();
+                }, 200);
+            });
+        }
+        
+        /**
+         * Calculates the median from an array of numbers.
+         * @param {number[]} arr - The array of numbers.
+         */
+        function calculateMedian(arr) {
+            const sorted = arr.slice().sort((a, b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            if (sorted.length % 2 === 0) {
+                return (sorted[mid - 1] + sorted[mid]) / 2;
+            }
+            return sorted[mid];
+        }
+
+        async function initializeTest() {
+            resultsScreen.classList.add('hidden');
+            testArea.classList.remove('hidden');
+            
+            state = 'start';
+            reactionTimes = [];
+            testArea.className = 'bg-start';
+            await updateText('Simple Reaction Test', 'Press anywhere to start.');
+        }
+
+        async function scheduleCue() {
+            state = 'waiting';
+            testArea.className = 'bg-wait';
+            await updateText('Wait for green...', `Trial ${reactionTimes.length + 1} of ${TOTAL_TRIALS}`);
+
+            const interval = Math.random() * (MAX_INTERVAL - MIN_INTERVAL) + MIN_INTERVAL;
+            
+            timeoutId = setTimeout(() => {
+                state = 'cue';
+                stimulusTime = performance.now();
+                testArea.className = 'bg-cue';
+                updateText('Press!', '');
+            }, interval);
+        }
+        
+        function showReport() {
+            state = 'end';
+            const median = calculateMedian(reactionTimes);
+            
+            finalMedianDisplay.textContent = `${Math.round(median)} ms`;
+            resultsList.innerHTML = ''; // Clear previous results
+            reactionTimes.forEach(time => {
+                const li = document.createElement('li');
+                li.textContent = Math.round(time);
+                resultsList.appendChild(li);
+            });
+            
+            testArea.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+        }
+
+        async function handleClick() {
+            switch (state) {
+                case 'start':
+                    scheduleCue();
+                    break;
+
+                case 'waiting':
+                    clearTimeout(timeoutId);
+                    state = 'early';
+                    testArea.className = 'bg-early';
+                    await updateText('Too soon!', 'Press to try this trial again.');
+                    break;
+
+                case 'early':
+                    scheduleCue();
+                    break;
+
+                case 'cue':
+                    const tapTime = performance.now();
+                    const rt = tapTime - stimulusTime;
+                    reactionTimes.push(rt);
+
+                    if (reactionTimes.length >= TOTAL_TRIALS) {
+                        showReport();
+                    } else {
+                        scheduleCue();
+                    }
+                    break;
+            }
+        }
+        
+        // --- Event Listeners ---
+        testArea.addEventListener('mousedown', handleClick);
+        retestButton.addEventListener('click', initializeTest);
+
+        // Start the app
+        initializeTest();
+    });
+    </script>
+</body>
+</html>
