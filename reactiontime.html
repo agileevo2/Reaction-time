@@ -5,326 +5,139 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Alphatek Reaction Time</title>
     
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            /* Alphatek Colour System */
             --canvas-bg: #0A0A0C;
             --primary-accent: #F6B45E;
             --panel-bg: #141416;
             --text-primary: #E8E8EA;
             --text-secondary: #b0b0b2;
-            
-            /* State Colours */
             --bg-wait: #2b87d1;
             --bg-cue: #85FFB6;
             --fg-cue: #0A0A0C;
             --bg-early: #FF3D3D;
         }
+        html { box-sizing: border-box; }
+        *, *:before, *:after { box-sizing: inherit; }
+        body { height: 100vh; margin: 0; font-family: 'Inter', sans-serif; background-color: var(--canvas-bg); color: var(--text-primary); overflow: hidden; }
 
-        html, body {
-            height: 100%;
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            background-color: var(--canvas-bg);
-            color: var(--text-primary);
-            overflow: hidden;
-        }
+        #app-container { display: flex; justify-content: center; align-items: center; height: 100%; width: 100%; }
 
-        #app-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            width: 100%;
-        }
-
-        /* --- Test Area --- */
-        #test-area {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            width: 100%;
-            text-align: center;
-            cursor: pointer;
-            transition: background-color 100ms ease-in-out, opacity 300ms ease-in-out;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
-        
-        #test-area.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        /* Backgrounds for test states */
+        #test-area { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; width: 100%; padding: 20px; text-align: center; cursor: pointer; transition: background-color 300ms ease-in-out, opacity 300ms ease-in-out; -webkit-tap-highlight-color: transparent; user-select: none; }
+        #test-area.hidden { opacity: 0; pointer-events: none; }
         .bg-start, .bg-wait { background-color: var(--bg-wait); }
         .bg-cue { background-color: var(--bg-cue); }
         .bg-early { background-color: var(--bg-early); }
 
-        #main-text, #sub-text {
-            transition: opacity 200ms ease-in-out;
-        }
+        #main-text { font-size: clamp(2.2rem, 8vw, 3rem); font-weight: 700; margin: 0; transition: opacity 200ms ease-in-out; }
+        .bg-cue #main-text { color: var(--fg-cue); }
+        #sub-text { font-size: clamp(1rem, 4vw, 1.1rem); margin-top: 1rem; opacity: 0.8; line-height: 1.5; max-width: 350px; transition: opacity 200ms ease-in-out; }
+        .bg-cue #sub-text { color: var(--fg-cue); }
+        .fade-out { opacity: 0 !important; }
 
-        #main-text {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin: 0;
-        }
+        /* Results Screen */
+        #results-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: opacity 300ms 150ms ease-out; pointer-events: none; }
+        #results-container.visible { opacity: 1; pointer-events: auto; }
+        #results-card { background-color: var(--panel-bg); padding: 32px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-height: 90vh; text-align: center; opacity: 0; transform: translateY(20px); transition: transform 400ms 150ms ease-out, opacity 400ms 150ms ease-out; display: flex; flex-direction: column; align-items: center; }
+        #results-container.visible #results-card { transform: translateY(0); opacity: 1; }
+        #results-card h2 { margin: 0 0 24px 0; font-weight: 600; font-size: 24px; }
+        #final-median-value { font-size: 56px; font-weight: 700; color: var(--primary-accent); line-height: 1; }
+        #final-median-value span { font-size: 24px; font-weight: 400; color: var(--primary-accent); margin-left: 8px; }
+        #median-label { color: var(--text-secondary); margin: 8px 0 32px 0; }
+        #raw-scores-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; width: 100%; margin: 0 0 32px 0; color: var(--text-secondary); font-size: 18px; }
+        #retest-button { background-color: var(--primary-accent); color: var(--canvas-bg); padding: 16px 32px; border-radius: 16px; font-size: 16px; font-weight: 600; border: none; cursor: pointer; width: 100%; transition: background-color 150ms ease; margin-bottom: 16px; }
+        #retest-button:hover { background-color: rgba(246, 180, 94, 0.9); }
+        #motivational-message { font-size: 16px; color: var(--text-secondary); }
         
-        .bg-cue #main-text {
-            color: var(--fg-cue);
-        }
-
-        #sub-text {
-            font-size: 1.1rem;
-            margin-top: 1rem;
-            opacity: 0.8;
-        }
-        
-        .bg-cue #sub-text {
-            color: var(--fg-cue);
-        }
-
-        .fade-out {
-            opacity: 0 !important;
-        }
-
-        /* --- Results Screen --- */
-        #results-screen {
-            background-color: var(--panel-bg);
-            padding: 32px;
-            border-radius: 16px;
-            text-align: center;
-            width: 90%;
-            max-width: 380px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            
-            opacity: 0;
-            transform: translateY(20px);
-            animation: slideUpFadeIn 400ms 300ms ease-out forwards;
-        }
-        
-        #results-screen.hidden {
-            display: none;
-        }
-
-        @keyframes slideUpFadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        #results-screen h2 {
-            margin-top: 0;
-            font-weight: 600;
-        }
-        
-        #final-median {
-            font-size: 48px;
-            font-weight: 700;
-            color: var(--primary-accent);
-            margin: 8px 0;
-        }
-        
-        #results-list {
-            list-style-type: none;
-            padding: 0;
-            margin: 16px 0 24px 0;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 8px;
-            color: var(--text-secondary);
-            font-size: 14px;
-        }
-        
-        #results-list li {
-            background-color: #2a2a2c;
-            padding: 4px 10px;
-            border-radius: 6px;
-        }
-        
-        #retest-button {
-            background-color: var(--primary-accent);
-            color: var(--canvas-bg);
-            padding: 14px 32px;
-            border-radius: 16px;
-            font-size: 16px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            width: 100%;
-            transition: background-color 150ms ease;
-        }
-        
-        #retest-button:hover {
-            background-color: rgba(246, 180, 94, 0.8);
-        }
-
+        /* Progress Bar */
+        #progress-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 8px; background-color: #1a1a1c; opacity: 0; transition: opacity 300ms ease-in-out; }
+        #progress-bar.visible { opacity: 1; }
+        #progress-bar-fill { height: 100%; width: 0%; background-color: var(--primary-accent); transition: width 400ms ease-out; }
     </style>
 </head>
 <body>
-
-    <div id="app-container">
-        
-        <!-- Main interactive area for the test -->
-        <div id="test-area">
-            <h1 id="main-text"></h1>
-            <p id="sub-text"></p>
-        </div>
-        
-        <!-- Hidden report screen -->
-        <div id="results-screen" class="hidden">
-            <h2>Results</h2>
-            <div id="final-median"></div>
-            <p style="color: var(--text-secondary); margin-top: 0;">Median Time</p>
-            <ul id="results-list"></ul>
-            <button id="retest-button">Test Again</button>
-        </div>
-
-    </div>
+    <div id="app-container"><div id="test-area"><h1 id="main-text"></h1><p id="sub-text"></p></div><div id="results-container"><div id="results-card"><h2>Results</h2><div id="final-median-value"></div><p id="median-label">Median Time</p><div id="raw-scores-list"></div><button id="retest-button">Test Again</button><p id="motivational-message"></p></div></div></div><div id="progress-bar"><div id="progress-bar-fill"></div></div>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // UI Elements
-        const testArea = document.getElementById('test-area');
-        const mainText = document.getElementById('main-text');
-        const subText = document.getElementById('sub-text');
+        const testArea = document.getElementById('test-area'), mainText = document.getElementById('main-text'), subText = document.getElementById('sub-text');
+        const resultsContainer = document.getElementById('results-container'), finalMedianDisplay = document.getElementById('final-median-value'), rawScoresList = document.getElementById('raw-scores-list'), retestButton = document.getElementById('retest-button'), motivationalMessage = document.getElementById('motivational-message');
+        const progressBar = document.getElementById('progress-bar'), progressBarFill = document.getElementById('progress-bar-fill');
+
+        const TOTAL_TRIALS = 5, MIN_INTERVAL = 1500, MAX_INTERVAL = 4000;
+        let state = 'tutorial', tutorialStep = 0, reactionTimes = [], timeoutId = null;
         
-        const resultsScreen = document.getElementById('results-screen');
-        const finalMedianDisplay = document.getElementById('final-median');
-        const resultsList = document.getElementById('results-list');
-        const retestButton = document.getElementById('retest-button');
-
-        // Test Parameters
-        const TOTAL_TRIALS = 5;
-        const MIN_INTERVAL = 1500;
-        const MAX_INTERVAL = 4000;
-
-        // App State
-        let state = 'start';
-        let reactionTimes = [];
-        let timeoutId = null;
-        let stimulusTime = 0;
-
-        /**
-         * Smoothly updates the on-screen text with a fade effect.
-         * @param {string} main - The new main text.
-         * @param {string} sub - The new sub text.
-         */
-        function updateText(main, sub) {
-            return new Promise(resolve => {
-                mainText.classList.add('fade-out');
-                subText.classList.add('fade-out');
-                
-                setTimeout(() => {
-                    mainText.textContent = main;
-                    subText.textContent = sub;
-                    mainText.classList.remove('fade-out');
-                    subText.classList.remove('fade-out');
-                    resolve();
-                }, 200);
-            });
-        }
+        const MOTIVATIONAL_MESSAGES = ["Consistency is key.", "Great focus!", "Well done!", "Practice makes perfect.", "You're getting faster!"];
         
-        /**
-         * Calculates the median from an array of numbers.
-         * @param {number[]} arr - The array of numbers.
-         */
-        function calculateMedian(arr) {
-            const sorted = arr.slice().sort((a, b) => a - b);
-            const mid = Math.floor(sorted.length / 2);
-            if (sorted.length % 2 === 0) {
-                return (sorted[mid - 1] + sorted[mid]) / 2;
+        // --- [TEXT UPDATED HERE] ---
+        const TUTORIAL_STEPS = [ 
+            { main: "Learn how the test works", sub: "This is a quick, interactive tutorial to get you started.", className: "bg-start" }, 
+            { main: "Wait for Green", sub: "When the screen is blue like this, stay ready and wait for it to change.", className: "bg-wait" }, 
+            { main: "Let's try one", sub: "Press as soon as the screen turns green.", className: "bg-wait", action: 'PRACTICE_TRIAL' }, 
+            { main: "Too Soon!", sub: "If you tap before the screen turns green, this red screen will appear. Just tap to try the trial again.", className: "bg-early" }, 
+            { main: "You're Ready!", sub: "That's everything you need to know.", className: "bg-start" }, 
+            { main: "Start Test", sub: "The real test will begin after you tap.", className: "bg-start" } 
+        ];
+
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+        const calculateMedian = arr => { if (!arr.length) return 0; const sorted = arr.slice().sort((a, b) => a - b), mid = Math.floor(sorted.length / 2); return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]; };
+        
+        async function updateText(main, sub = '') { mainText.classList.add('fade-out'); subText.classList.add('fade-out'); await wait(200); mainText.textContent = main; subText.textContent = sub; mainText.classList.remove('fade-out'); subText.classList.remove('fade-out'); }
+        function updateProgressBar() { progressBarFill.style.width = `${(reactionTimes.length / TOTAL_TRIALS) * 100}%`; }
+        
+        async function initializeTest() { resultsContainer.classList.remove('visible'); testArea.classList.remove('hidden'); progressBar.classList.remove('visible'); await wait(300); state = 'tutorial'; tutorialStep = 0; reactionTimes = []; updateProgressBar(); showTutorialStep(tutorialStep); }
+        function showTutorialStep(stepIndex) {
+            const step = TUTORIAL_STEPS[stepIndex];
+            testArea.className = step.className;
+            updateText(step.main, step.sub);
+            if (step.action === 'PRACTICE_TRIAL') {
+                scheduleCue(true); // true = is practice
             }
-            return sorted[mid];
         }
 
-        async function initializeTest() {
-            resultsScreen.classList.add('hidden');
-            testArea.classList.remove('hidden');
-            
-            state = 'start';
-            reactionTimes = [];
-            testArea.className = 'bg-start';
-            await updateText('Simple Reaction Test', 'Press anywhere to start.');
-        }
+        async function startCountdown() { state = 'countdown'; testArea.className = 'bg-wait'; progressBar.classList.add('visible'); updateProgressBar(); await updateText('Get Ready...', `Trial ${reactionTimes.length + 1} of ${TOTAL_TRIALS}`); await wait(1200); await updateText('3'); await wait(800); await updateText('2'); await wait(800); await updateText('1'); await wait(800); scheduleCue(false); }
+        
+        async function scheduleCue(isPractice = false) {
+            state = isPractice ? 'tutorial_practice_wait' : 'waiting';
+            if (!isPractice) await updateText('...');
 
-        async function scheduleCue() {
-            state = 'waiting';
-            testArea.className = 'bg-wait';
-            await updateText('Wait for green...', `Trial ${reactionTimes.length + 1} of ${TOTAL_TRIALS}`);
+            const interval = isPractice 
+                ? Math.random() * 1500 + 1500
+                : Math.random() * (MAX_INTERVAL - MIN_INTERVAL) + MIN_INTERVAL;
 
-            const interval = Math.random() * (MAX_INTERVAL - MIN_INTERVAL) + MIN_INTERVAL;
-            
             timeoutId = setTimeout(() => {
-                state = 'cue';
-                stimulusTime = performance.now();
-                testArea.className = 'bg-cue';
-                updateText('Press!', '');
+                requestAnimationFrame(() => {
+                    if (state !== 'tutorial_practice_wait' && state !== 'waiting') return;
+                    
+                    state = isPractice ? 'tutorial_practice_cue' : 'cue';
+                    testArea.dataset.stimulusTime = performance.now();
+                    testArea.className = 'bg-cue';
+                    updateText('Press!');
+                });
             }, interval);
         }
-        
-        function showReport() {
-            state = 'end';
-            const median = calculateMedian(reactionTimes);
-            
-            finalMedianDisplay.textContent = `${Math.round(median)} ms`;
-            resultsList.innerHTML = ''; // Clear previous results
-            reactionTimes.forEach(time => {
-                const li = document.createElement('li');
-                li.textContent = Math.round(time);
-                resultsList.appendChild(li);
-            });
-            
-            testArea.classList.add('hidden');
-            resultsScreen.classList.remove('hidden');
-        }
+
+        function showReport() { state = 'end'; progressBar.classList.remove('visible'); const median = calculateMedian(reactionTimes); finalMedianDisplay.innerHTML = `${Math.round(median)}<span>ms</span>`; motivationalMessage.textContent = MOTIVATIONAL_MESSAGES[Math.floor(Math.random() * MOTIVATIONAL_MESSAGES.length)]; rawScoresList.innerHTML = ''; reactionTimes.forEach(time => { const scoreElement = document.createElement('div'); scoreElement.textContent = Math.round(time); rawScoresList.appendChild(scoreElement); }); testArea.classList.add('hidden'); resultsContainer.classList.add('visible'); }
 
         async function handleClick() {
             switch (state) {
-                case 'start':
-                    scheduleCue();
-                    break;
-
-                case 'waiting':
-                    clearTimeout(timeoutId);
-                    state = 'early';
-                    testArea.className = 'bg-early';
-                    await updateText('Too soon!', 'Press to try this trial again.');
-                    break;
-
-                case 'early':
-                    scheduleCue();
-                    break;
-
-                case 'cue':
-                    const tapTime = performance.now();
-                    const rt = tapTime - stimulusTime;
-                    reactionTimes.push(rt);
-
-                    if (reactionTimes.length >= TOTAL_TRIALS) {
-                        showReport();
-                    } else {
-                        scheduleCue();
-                    }
-                    break;
+                case 'tutorial': tutorialStep++; (tutorialStep < TUTORIAL_STEPS.length) ? showTutorialStep(tutorialStep) : startCountdown(); break;
+                case 'tutorial_practice_wait': clearTimeout(timeoutId); state = 'tutorial'; showTutorialStep(tutorialStep); break;
+                case 'tutorial_practice_cue': const rtPractice = performance.now() - parseFloat(testArea.dataset.stimulusTime); testArea.className = 'bg-start'; await updateText(`${Math.round(rtPractice)} ms`, "Nice! That's your reaction time. Tap to continue."); state = 'tutorial'; break;
+                case 'countdown': return;
+                case 'waiting': clearTimeout(timeoutId); state = 'early'; testArea.className = 'bg-early'; await updateText('Too soon!', 'Press to try this trial again.'); break;
+                case 'early': startCountdown(); break;
+                case 'cue': const rtReal = performance.now() - parseFloat(testArea.dataset.stimulusTime); reactionTimes.push(rtReal); updateProgressBar(); (reactionTimes.length >= TOTAL_TRIALS) ? showReport() : startCountdown(); break;
             }
         }
         
-        // --- Event Listeners ---
-        testArea.addEventListener('mousedown', handleClick);
+        testArea.addEventListener('pointerdown', handleClick);
         retestButton.addEventListener('click', initializeTest);
 
-        // Start the app
         initializeTest();
     });
     </script>
