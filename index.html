@@ -20,125 +20,1068 @@
             --bg-cue: #85FFB6;
             --fg-cue: #0A0A0C;
             --bg-early: #FF3D3D;
+            --success: #4CAF50;
+            --warning: #FFC107;
+            --error: #F44336;
         }
+        
         html { box-sizing: border-box; }
         *, *:before, *:after { box-sizing: inherit; }
-        body { height: 100vh; margin: 0; font-family: 'Inter', sans-serif; background-color: var(--canvas-bg); color: var(--text-primary); overflow: hidden; }
+        body { 
+            height: 100vh; 
+            margin: 0; 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--canvas-bg); 
+            color: var(--text-primary); 
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-        #app-container { display: flex; justify-content: center; align-items: center; height: 100%; width: 100%; }
+        #app-container { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100%; 
+            width: 100%; 
+            position: relative;
+        }
 
-        #test-area { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; width: 100%; padding: 20px; text-align: center; cursor: pointer; transition: background-color 300ms ease-in-out, opacity 300ms ease-in-out; -webkit-tap-highlight-color: transparent; user-select: none; }
+        #test-area { 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100%; 
+            width: 100%; 
+            padding: 20px; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: background-color 300ms ease-in-out, opacity 300ms ease-in-out; 
+            -webkit-tap-highlight-color: transparent; 
+            user-select: none; 
+        }
+        
         #test-area.hidden { opacity: 0; pointer-events: none; }
         .bg-start, .bg-wait { background-color: var(--bg-wait); }
-        .bg-cue { background-color: var(--bg-cue); }
+        .bg-cue { 
+            background-color: var(--bg-cue); 
+            animation: pulse 1s infinite;
+        }
         .bg-early { background-color: var(--bg-early); }
 
-        #main-text { font-size: clamp(2.2rem, 8vw, 3rem); font-weight: 700; margin: 0; transition: opacity 200ms ease-in-out; }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        #main-text { 
+            font-size: clamp(2.2rem, 8vw, 3rem); 
+            font-weight: 700; 
+            margin: 0; 
+            transition: opacity 200ms ease-in-out; 
+        }
+        
         .bg-cue #main-text { color: var(--fg-cue); }
-        #sub-text { font-size: clamp(1rem, 4vw, 1.1rem); margin-top: 1rem; opacity: 0.8; line-height: 1.5; max-width: 350px; transition: opacity 200ms ease-in-out; }
+        
+        #sub-text { 
+            font-size: clamp(1rem, 4vw, 1.1rem); 
+            margin-top: 1rem; 
+            opacity: 0.8; 
+            line-height: 1.5; 
+            max-width: 350px; 
+            transition: opacity 200ms ease-in-out; 
+        }
+        
         .bg-cue #sub-text { color: var(--fg-cue); }
         .fade-out { opacity: 0 !important; }
 
         /* Results Screen */
-        #results-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: opacity 300ms 150ms ease-out; pointer-events: none; }
+        #results-container { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 20px; 
+            opacity: 0; 
+            transition: opacity 300ms 150ms ease-out; 
+            pointer-events: none; 
+            z-index: 10;
+        }
+        
         #results-container.visible { opacity: 1; pointer-events: auto; }
-        #results-card { background-color: var(--panel-bg); padding: 32px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-height: 90vh; text-align: center; opacity: 0; transform: translateY(20px); transition: transform 400ms 150ms ease-out, opacity 400ms 150ms ease-out; display: flex; flex-direction: column; align-items: center; }
+        
+        #results-card {
+            background-color: var(--panel-bg); 
+            padding: 32px; 
+            border-radius: 16px; 
+            width: 100%; 
+            max-width: 500px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
+            max-height: 90vh; 
+            text-align: center;
+            opacity: 0; 
+            transform: translateY(20px); 
+            transition: transform 400ms 150ms ease-out, opacity 400ms 150ms ease-out;
+            display: grid; 
+            grid-template-rows: auto auto auto 1fr auto auto; 
+            gap: 20px;
+        }
+        
         #results-container.visible #results-card { transform: translateY(0); opacity: 1; }
-        #results-card h2 { margin: 0 0 24px 0; font-weight: 600; font-size: 24px; }
-        #final-median-value { font-size: 56px; font-weight: 700; color: var(--primary-accent); line-height: 1; }
-        #final-median-value span { font-size: 24px; font-weight: 400; color: var(--primary-accent); margin-left: 8px; }
-        #median-label { color: var(--text-secondary); margin: 8px 0 32px 0; }
-        #raw-scores-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; width: 100%; margin: 0 0 32px 0; color: var(--text-secondary); font-size: 18px; }
-        #retest-button { background-color: var(--primary-accent); color: var(--canvas-bg); padding: 16px 32px; border-radius: 16px; font-size: 16px; font-weight: 600; border: none; cursor: pointer; width: 100%; transition: background-color 150ms ease; margin-bottom: 16px; }
-        #retest-button:hover { background-color: rgba(246, 180, 94, 0.9); }
-        #motivational-message { font-size: 16px; color: var(--text-secondary); }
+        
+        #results-card h2 { 
+            grid-row: 1; 
+            margin: 0; 
+            font-weight: 600; 
+            font-size: 28px; 
+        }
+        
+        #results-stats { 
+            grid-row: 2; 
+            margin-top: 8px; 
+        }
+        
+        #final-median-value { 
+            font-size: 56px; 
+            font-weight: 700; 
+            color: var(--primary-accent); 
+            line-height: 1; 
+        }
+        
+        #final-median-value span { 
+            font-size: 24px; 
+            font-weight: 400; 
+            color: var(--primary-accent); 
+            margin-left: 8px; 
+        }
+        
+        #median-label { 
+            color: var(--text-secondary); 
+            margin: 8px 0 0 0; 
+            font-size: 16px;
+        }
+        
+        #additional-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+        
+        #retest-button { 
+            grid-row: 5; 
+            background-color: var(--primary-accent); 
+            color: var(--canvas-bg); 
+            padding: 16px 32px; 
+            border-radius: 16px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            border: none; 
+            cursor: pointer; 
+            width: 100%; 
+            transition: background-color 150ms ease, transform 100ms ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #retest-button:hover { 
+            background-color: rgba(246, 180, 94, 0.9);
+            transform: translateY(-2px);
+        }
+        
+        #retest-button:active {
+            transform: translateY(0);
+        }
+        
+        #retest-button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        #retest-button:hover::after {
+            width: 300px;
+            height: 300px;
+        }
+        
+        #motivational-message { 
+            grid-row: 6; 
+            font-size: 16px; 
+            color: var(--text-secondary); 
+            font-style: italic;
+        }
+        
+        /* Sparkline Graph */
+        #sparkline-container {
+            grid-row: 4;
+            width: 100%;
+            height: 120px;
+            margin: 10px 0;
+            position: relative;
+        }
+        
+        #sparkline-svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        #sparkline-path {
+            fill: none;
+            stroke: var(--primary-accent);
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: draw-line 1s 300ms ease-out forwards;
+        }
+        
+        .sparkline-dot {
+            fill: var(--primary-accent);
+            stroke: var(--panel-bg);
+            stroke-width: 3;
+            opacity: 0;
+            animation: fade-in 500ms 800ms ease-out forwards;
+        }
+        
+        @keyframes draw-line { to { stroke-dashoffset: 0; } }
+        @keyframes fade-in { to { opacity: 1; } }
         
         /* Progress Bar */
-        #progress-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 8px; background-color: #1a1a1c; opacity: 0; transition: opacity 300ms ease-in-out; }
+        #progress-bar { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 8px; 
+            background-color: #1a1a1c; 
+            opacity: 0; 
+            transition: opacity 300ms ease-in-out; 
+            z-index: 20;
+        }
+        
         #progress-bar.visible { opacity: 1; }
-        #progress-bar-fill { height: 100%; width: 0%; background-color: var(--primary-accent); transition: width 400ms ease-out; }
+        #progress-bar-fill { 
+            height: 100%; 
+            width: 0%; 
+            background-color: var(--primary-accent); 
+            transition: width 400ms ease-out; 
+        }
+        
+        /* History Button */
+        #history-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: var(--panel-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--text-secondary);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 30;
+        }
+        
+        #history-button:hover {
+            background-color: rgba(246, 180, 94, 0.2);
+            border-color: var(--primary-accent);
+        }
+        
+        /* History Modal */
+        #history-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 300ms ease;
+            z-index: 100;
+        }
+        
+        #history-modal.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        #history-content {
+            background-color: var(--panel-bg);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 300ms ease;
+        }
+        
+        #history-modal.visible #history-content {
+            transform: scale(1);
+        }
+        
+        #history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        #history-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        #close-history {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        #close-history:hover {
+            color: var(--text-primary);
+        }
+        
+        .history-item {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background-color: rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s;
+        }
+        
+        .history-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .history-date {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .history-stats {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .history-stat {
+            text-align: center;
+        }
+        
+        .history-stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-accent);
+        }
+        
+        .history-stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .no-history {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-secondary);
+        }
+        
+        /* Help Button */
+        #help-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--panel-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--text-secondary);
+            font-size: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 30;
+        }
+        
+        #help-button:hover {
+            background-color: rgba(246, 180, 94, 0.2);
+            border-color: var(--primary-accent);
+        }
+        
+        /* Help Modal */
+        #help-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 300ms ease;
+            z-index: 100;
+        }
+        
+        #help-modal.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        #help-content {
+            background-color: var(--panel-bg);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 300ms ease;
+        }
+        
+        #help-modal.visible #help-content {
+            transform: scale(1);
+        }
+        
+        #help-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        #help-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        #close-help {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        #close-help:hover {
+            color: var(--text-primary);
+        }
+        
+        .help-section {
+            margin-bottom: 20px;
+        }
+        
+        .help-section h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: var(--primary-accent);
+            font-size: 18px;
+        }
+        
+        .help-section p {
+            margin: 0 0 10px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+        
+        .help-section ul {
+            padding-left: 20px;
+            margin: 10px 0;
+            color: var(--text-secondary);
+        }
+        
+        .help-section li {
+            margin-bottom: 8px;
+        }
+        
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+        
+        /* Responsive */
+        @media (max-width: 600px) {
+            #results-card {
+                padding: 20px;
+            }
+            
+            #final-median-value {
+                font-size: 48px;
+            }
+            
+            #additional-stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div id="app-container"><div id="test-area"><h1 id="main-text"></h1><p id="sub-text"></p></div><div id="results-container"><div id="results-card"><h2>Results</h2><div id="final-median-value"></div><p id="median-label">Median Time</p><div id="raw-scores-list"></div><button id="retest-button">Test Again</button><p id="motivational-message"></p></div></div></div><div id="progress-bar"><div id="progress-bar-fill"></div></div>
+    <div id="app-container">
+        <div id="test-area" role="button" tabindex="0" aria-label="Reaction test area">
+            <h1 id="main-text"></h1>
+            <p id="sub-text"></p>
+        </div>
+        
+        <div id="results-container" role="dialog" aria-modal="true" aria-labelledby="results-title">
+            <div id="results-card">
+                <h2 id="results-title">Results</h2>
+                <div id="results-stats">
+                    <div id="final-median-value"></div>
+                    <p id="median-label">Median Time</p>
+                    <div id="additional-stats">
+                        <div class="stat-item">
+                            <div class="stat-value" id="mean-value">-</div>
+                            <div class="stat-label">Average</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="min-value">-</div>
+                            <div class="stat-label">Best</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="max-value">-</div>
+                            <div class="stat-label">Worst</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="sparkline-container">
+                    <svg id="sparkline-svg"></svg>
+                </div>
+                <button id="retest-button" aria-label="Start a new reaction time test">Test Again</button>
+                <p id="motivational-message"></p>
+            </div>
+        </div>
+        
+        <div id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            <div id="progress-bar-fill"></div>
+        </div>
+        
+        <button id="history-button" aria-label="View test history">History</button>
+        <button id="help-button" aria-label="View help and instructions">?</button>
+    </div>
+    
+    <!-- History Modal -->
+    <div id="history-modal" role="dialog" aria-modal="true" aria-labelledby="history-title">
+        <div id="history-content">
+            <div id="history-header">
+                <h2 id="history-title">Test History</h2>
+                <button id="close-history" aria-label="Close history">&times;</button>
+            </div>
+            <div id="history-list">
+                <div class="no-history">No test history available</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Help Modal -->
+    <div id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <div id="help-content">
+            <div id="help-header">
+                <h2 id="help-title">How to Play</h2>
+                <button id="close-help" aria-label="Close help">&times;</button>
+            </div>
+            <div class="help-section">
+                <h3>Objective</h3>
+                <p>Test your reaction time by tapping as quickly as possible when the screen changes color.</p>
+            </div>
+            <div class="help-section">
+                <h3>Instructions</h3>
+                <ul>
+                    <li>Tap the screen to start a practice round</li>
+                    <li>After a countdown, wait for the screen to turn green</li>
+                    <li>Tap as quickly as possible when the screen turns green</li>
+                    <li>Complete 5 trials to get your results</li>
+                    <li>Don't tap too early or you'll have to restart the trial</li>
+                </ul>
+            </div>
+            <div class="help-section">
+                <h3>Controls</h3>
+                <ul>
+                    <li>Tap anywhere on the screen to interact</li>
+                    <li>Press Space or Enter to interact (keyboard support)</li>
+                    <li>Use the "History" button to view past results</li>
+                </ul>
+            </div>
+            <div class="help-section">
+                <h3>About</h3>
+                <p>The average human reaction time is between 200-300ms. Professional gamers can achieve reaction times under 150ms.</p>
+            </div>
+        </div>
+    </div>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const testArea = document.getElementById('test-area'), mainText = document.getElementById('main-text'), subText = document.getElementById('sub-text');
-        const resultsContainer = document.getElementById('results-container'), finalMedianDisplay = document.getElementById('final-median-value'), rawScoresList = document.getElementById('raw-scores-list'), retestButton = document.getElementById('retest-button'), motivationalMessage = document.getElementById('motivational-message');
-        const progressBar = document.getElementById('progress-bar'), progressBarFill = document.getElementById('progress-bar-fill');
-
-        const TOTAL_TRIALS = 5, MIN_INTERVAL = 1500, MAX_INTERVAL = 4000;
-        let state = 'tutorial', tutorialStep = 0, reactionTimes = [], timeoutId = null;
-        
-        const MOTIVATIONAL_MESSAGES = ["Consistency is key.", "Great focus!", "Well done!", "Practice makes perfect.", "You're getting faster!"];
-        
-        // --- [TEXT UPDATED HERE] ---
-        const TUTORIAL_STEPS = [ 
-            { main: "Learn how the test works", sub: "This is a quick, interactive tutorial to get you started.", className: "bg-start" }, 
-            { main: "Wait for Green", sub: "When the screen is blue like this, stay ready and wait for it to change.", className: "bg-wait" }, 
-            { main: "Let's try one", sub: "Press as soon as the screen turns green.", className: "bg-wait", action: 'PRACTICE_TRIAL' }, 
-            { main: "Too Soon!", sub: "If you tap before the screen turns green, this red screen will appear. Just tap to try the trial again.", className: "bg-early" }, 
-            { main: "You're Ready!", sub: "That's everything you need to know.", className: "bg-start" }, 
-            { main: "Start Test", sub: "The real test will begin after you tap.", className: "bg-start" } 
-        ];
-
-        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-        const calculateMedian = arr => { if (!arr.length) return 0; const sorted = arr.slice().sort((a, b) => a - b), mid = Math.floor(sorted.length / 2); return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]; };
-        
-        async function updateText(main, sub = '') { mainText.classList.add('fade-out'); subText.classList.add('fade-out'); await wait(200); mainText.textContent = main; subText.textContent = sub; mainText.classList.remove('fade-out'); subText.classList.remove('fade-out'); }
-        function updateProgressBar() { progressBarFill.style.width = `${(reactionTimes.length / TOTAL_TRIALS) * 100}%`; }
-        
-        async function initializeTest() { resultsContainer.classList.remove('visible'); testArea.classList.remove('hidden'); progressBar.classList.remove('visible'); await wait(300); state = 'tutorial'; tutorialStep = 0; reactionTimes = []; updateProgressBar(); showTutorialStep(tutorialStep); }
-        function showTutorialStep(stepIndex) {
-            const step = TUTORIAL_STEPS[stepIndex];
-            testArea.className = step.className;
-            updateText(step.main, step.sub);
-            if (step.action === 'PRACTICE_TRIAL') {
-                scheduleCue(true); // true = is practice
+        // Sound Effects Class
+        class SoundEffects {
+            constructor() {
+                this.cueSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3');
+                this.successSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3');
+                this.errorSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3');
+                
+                // Preload sounds
+                this.cueSound.load();
+                this.successSound.load();
+                this.errorSound.load();
+            }
+            
+            playCue() {
+                this.cueSound.currentTime = 0;
+                this.cueSound.play().catch(e => console.log('Audio play failed:', e));
+            }
+            
+            playSuccess() {
+                this.successSound.currentTime = 0;
+                this.successSound.play().catch(e => console.log('Audio play failed:', e));
+            }
+            
+            playError() {
+                this.errorSound.currentTime = 0;
+                this.errorSound.play().catch(e => console.log('Audio play failed:', e));
             }
         }
-
-        async function startCountdown() { state = 'countdown'; testArea.className = 'bg-wait'; progressBar.classList.add('visible'); updateProgressBar(); await updateText('Get Ready...', `Trial ${reactionTimes.length + 1} of ${TOTAL_TRIALS}`); await wait(1200); await updateText('3'); await wait(800); await updateText('2'); await wait(800); await updateText('1'); await wait(800); scheduleCue(false); }
         
-        async function scheduleCue(isPractice = false) {
-            state = isPractice ? 'tutorial_practice_wait' : 'waiting';
-            if (!isPractice) await updateText('...');
-
-            const interval = isPractice 
-                ? Math.random() * 1500 + 1500
-                : Math.random() * (MAX_INTERVAL - MIN_INTERVAL) + MIN_INTERVAL;
-
-            timeoutId = setTimeout(() => {
-                requestAnimationFrame(() => {
-                    if (state !== 'tutorial_practice_wait' && state !== 'waiting') return;
-                    
-                    state = isPractice ? 'tutorial_practice_cue' : 'cue';
-                    testArea.dataset.stimulusTime = performance.now();
-                    testArea.className = 'bg-cue';
-                    updateText('Press!');
+        // Reaction Time Test Class
+        class ReactionTimeTest {
+            constructor() {
+                // Constants
+                this.TOTAL_TRIALS = 5;
+                this.MIN_INTERVAL = 1500;
+                this.MAX_INTERVAL = 4000;
+                this.MOTIVATIONAL_MESSAGES = [
+                    "Consistency is key.",
+                    "Great focus!",
+                    "Well done!",
+                    "Practice makes perfect.",
+                    "You're getting faster!",
+                    "Impressive reaction time!",
+                    "Lightning fast!",
+                    "Keep up the great work!",
+                    "Your reflexes are improving!",
+                    "Excellent performance!"
+                ];
+                
+                // State
+                this.state = 'welcome';
+                this.reactionTimes = [];
+                this.timeoutId = null;
+                
+                // Elements
+                this.testArea = document.getElementById('test-area');
+                this.mainText = document.getElementById('main-text');
+                this.subText = document.getElementById('sub-text');
+                this.resultsContainer = document.getElementById('results-container');
+                this.finalMedianDisplay = document.getElementById('final-median-value');
+                this.meanDisplay = document.getElementById('mean-value');
+                this.minDisplay = document.getElementById('min-value');
+                this.maxDisplay = document.getElementById('max-value');
+                this.retestButton = document.getElementById('retest-button');
+                this.motivationalMessage = document.getElementById('motivational-message');
+                this.sparklineSVG = document.getElementById('sparkline-svg');
+                this.progressBar = document.getElementById('progress-bar');
+                this.progressBarFill = document.getElementById('progress-bar-fill');
+                this.historyButton = document.getElementById('history-button');
+                this.helpButton = document.getElementById('help-button');
+                this.historyModal = document.getElementById('history-modal');
+                this.helpModal = document.getElementById('help-modal');
+                this.closeHistoryButton = document.getElementById('close-history');
+                this.closeHelpButton = document.getElementById('close-help');
+                this.historyList = document.getElementById('history-list');
+                
+                // Sound effects
+                this.sounds = new SoundEffects();
+                
+                // Initialize
+                this.initEventListeners();
+                this.initializeTest();
+            }
+            
+            initEventListeners() {
+                // Test area interactions
+                this.testArea.addEventListener('pointerdown', () => this.handleClick());
+                this.testArea.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.handleClick();
+                    }
                 });
-            }, interval);
-        }
-
-        function showReport() { state = 'end'; progressBar.classList.remove('visible'); const median = calculateMedian(reactionTimes); finalMedianDisplay.innerHTML = `${Math.round(median)}<span>ms</span>`; motivationalMessage.textContent = MOTIVATIONAL_MESSAGES[Math.floor(Math.random() * MOTIVATIONAL_MESSAGES.length)]; rawScoresList.innerHTML = ''; reactionTimes.forEach(time => { const scoreElement = document.createElement('div'); scoreElement.textContent = Math.round(time); rawScoresList.appendChild(scoreElement); }); testArea.classList.add('hidden'); resultsContainer.classList.add('visible'); }
-
-        async function handleClick() {
-            switch (state) {
-                case 'tutorial': tutorialStep++; (tutorialStep < TUTORIAL_STEPS.length) ? showTutorialStep(tutorialStep) : startCountdown(); break;
-                case 'tutorial_practice_wait': clearTimeout(timeoutId); state = 'tutorial'; showTutorialStep(tutorialStep); break;
-                case 'tutorial_practice_cue': const rtPractice = performance.now() - parseFloat(testArea.dataset.stimulusTime); testArea.className = 'bg-start'; await updateText(`${Math.round(rtPractice)} ms`, "Nice! That's your reaction time. Tap to continue."); state = 'tutorial'; break;
-                case 'countdown': return;
-                case 'waiting': clearTimeout(timeoutId); state = 'early'; testArea.className = 'bg-early'; await updateText('Too soon!', 'Press to try this trial again.'); break;
-                case 'early': startCountdown(); break;
-                case 'cue': const rtReal = performance.now() - parseFloat(testArea.dataset.stimulusTime); reactionTimes.push(rtReal); updateProgressBar(); (reactionTimes.length >= TOTAL_TRIALS) ? showReport() : startCountdown(); break;
+                
+                // Buttons
+                this.retestButton.addEventListener('click', () => this.initializeTest());
+                this.historyButton.addEventListener('click', () => this.showHistory());
+                this.helpButton.addEventListener('click', () => this.showHelp());
+                this.closeHistoryButton.addEventListener('click', () => this.hideHistory());
+                this.closeHelpButton.addEventListener('click', () => this.hideHelp());
+                
+                // Close modals when clicking outside
+                this.historyModal.addEventListener('click', (e) => {
+                    if (e.target === this.historyModal) this.hideHistory();
+                });
+                
+                this.helpModal.addEventListener('click', (e) => {
+                    if (e.target === this.helpModal) this.hideHelp();
+                });
+            }
+            
+            async updateText(main, sub = '') {
+                this.mainText.classList.add('fade-out');
+                this.subText.classList.add('fade-out');
+                await this.wait(200);
+                this.mainText.textContent = main;
+                this.subText.textContent = sub;
+                this.mainText.classList.remove('fade-out');
+                this.subText.classList.remove('fade-out');
+            }
+            
+            updateProgressBar() {
+                const progress = (this.reactionTimes.length / this.TOTAL_TRIALS) * 100;
+                this.progressBarFill.style.width = `${progress}%`;
+                this.progressBar.setAttribute('aria-valuenow', Math.round(progress));
+            }
+            
+            wait(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+            
+            calculateStats(arr) {
+                if (!arr.length) return { 
+                    median: 0, 
+                    mean: 0, 
+                    min: 0, 
+                    max: 0, 
+                    stdDev: 0 
+                };
+                
+                const sorted = arr.slice().sort((a, b) => a - b);
+                const mid = Math.floor(sorted.length / 2);
+                const median = sorted.length % 2 === 0 ? 
+                    (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+                
+                const sum = arr.reduce((a, b) => a + b, 0);
+                const mean = sum / arr.length;
+                
+                const min = Math.min(...arr);
+                const max = Math.max(...arr);
+                
+                const squaredDiffs = arr.map(value => Math.pow(value - mean, 2));
+                const avgSquaredDiff = squaredDiffs.reduce((a, b) => a + b, 0) / arr.length;
+                const stdDev = Math.sqrt(avgSquaredDiff);
+                
+                return { median, mean, min, max, stdDev };
+            }
+            
+            async initializeTest() {
+                this.resultsContainer.classList.remove('visible');
+                this.testArea.classList.remove('hidden');
+                this.progressBar.classList.remove('visible');
+                await this.wait(300);
+                this.state = 'welcome';
+                this.reactionTimes = [];
+                this.updateProgressBar();
+                this.testArea.className = 'bg-start';
+                await this.updateText('Reaction Test', "Tap to start a practice round.");
+            }
+            
+            async startCountdown(isPractice = false) {
+                this.state = isPractice ? 'practice_countdown' : 'countdown';
+                this.testArea.className = 'bg-wait';
+                
+                if (isPractice) {
+                    await this.updateText('Get Ready...');
+                } else {
+                    this.progressBar.classList.add('visible');
+                    this.updateProgressBar();
+                    await this.updateText('Get Ready...', `Trial ${this.reactionTimes.length + 1} of ${this.TOTAL_TRIALS}`);
+                }
+                
+                await this.wait(1200);
+                await this.updateText('3');
+                await this.wait(800);
+                await this.updateText('2');
+                await this.wait(800);
+                await this.updateText('1');
+                await this.wait(800);
+                this.scheduleCue(isPractice);
+            }
+            
+            async scheduleCue(isPractice) {
+                this.state = isPractice ? 'practice_waiting' : 'waiting';
+                await this.updateText('...');
+                
+                const interval = isPractice ? 2500 : 
+                    Math.random() * (this.MAX_INTERVAL - this.MIN_INTERVAL) + this.MIN_INTERVAL;
+                
+                this.timeoutId = setTimeout(() => {
+                    requestAnimationFrame(() => {
+                        if (this.state !== (isPractice ? 'practice_waiting' : 'waiting')) return;
+                        this.state = isPractice ? 'practice_cue' : 'cue';
+                        this.testArea.dataset.stimulusTime = performance.now();
+                        this.testArea.className = 'bg-cue';
+                        this.updateText('Press!');
+                        this.sounds.playCue();
+                    });
+                }, interval);
+            }
+            
+            showReport() {
+                this.state = 'end';
+                this.progressBar.classList.remove('visible');
+                
+                const stats = this.calculateStats(this.reactionTimes);
+                
+                // Update displays
+                this.finalMedianDisplay.innerHTML = `${Math.round(stats.median)}<span>ms</span>`;
+                this.meanDisplay.textContent = `${Math.round(stats.mean)}ms`;
+                this.minDisplay.textContent = `${Math.round(stats.min)}ms`;
+                this.maxDisplay.textContent = `${Math.round(stats.max)}ms`;
+                
+                // Random motivational message
+                this.motivationalMessage.textContent = 
+                    this.MOTIVATIONAL_MESSAGES[Math.floor(Math.random() * this.MOTIVATIONAL_MESSAGES.length)];
+                
+                // Build sparkline
+                this.buildSparkline(this.reactionTimes);
+                
+                // Save to history
+                this.saveToHistory(stats);
+                
+                // Show results
+                this.testArea.classList.add('hidden');
+                this.resultsContainer.classList.add('visible');
+                
+                // Play success sound
+                this.sounds.playSuccess();
+            }
+            
+            buildSparkline(times) {
+                this.sparklineSVG.innerHTML = '';
+                
+                const width = 300;
+                const height = 100;
+                const padding = 15;
+                
+                const minTime = Math.min(...times);
+                const maxTime = Math.max(...times);
+                const timeRange = maxTime - minTime || 1; // Prevent division by zero
+                
+                // Normalize data points
+                const points = times.map((time, index) => {
+                    const x = (index / (times.length - 1)) * (width - padding * 2) + padding;
+                    const y = height - (((time - minTime) / timeRange) * (height - padding * 2) + padding);
+                    return { x, y };
+                });
+                
+                // Create SVG path string
+                const pathData = points.reduce((acc, point, i) => {
+                    return i === 0 ? `M ${point.x},${point.y}` : `${acc} L ${point.x},${point.y}`;
+                }, '');
+                
+                // Create path element
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute('d', pathData);
+                path.setAttribute('id', 'sparkline-path');
+                this.sparklineSVG.appendChild(path);
+                
+                // Create dot elements
+                points.forEach(point => {
+                    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    dot.setAttribute('cx', point.x);
+                    dot.setAttribute('cy', point.y);
+                    dot.setAttribute('r', 5);
+                    dot.setAttribute('class', 'sparkline-dot');
+                    this.sparklineSVG.appendChild(dot);
+                });
+            }
+            
+            saveToHistory(stats) {
+                const history = JSON.parse(localStorage.getItem('reactionTimeHistory') || '[]');
+                history.push({
+                    date: new Date().toISOString(),
+                    median: stats.median,
+                    mean: stats.mean,
+                    min: stats.min,
+                    max: stats.max,
+                    times: this.reactionTimes
+                });
+                
+                // Keep only the last 10 results
+                if (history.length > 10) {
+                    history.shift();
+                }
+                
+                localStorage.setItem('reactionTimeHistory', JSON.stringify(history));
+            }
+            
+            showHistory() {
+                const history = JSON.parse(localStorage.getItem('reactionTimeHistory') || '[]');
+                
+                if (history.length === 0) {
+                    this.historyList.innerHTML = '<div class="no-history">No test history available</div>';
+                } else {
+                    this.historyList.innerHTML = history.map(item => {
+                        const date = new Date(item.date);
+                        const formattedDate = date.toLocaleDateString() + ' ' + 
+                            date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        
+                        return `
+                            <div class="history-item">
+                                <div class="history-date">${formattedDate}</div>
+                                <div class="history-stats">
+                                    <div class="history-stat">
+                                        <div class="history-stat-value">${Math.round(item.median)}ms</div>
+                                        <div class="history-stat-label">Median</div>
+                                    </div>
+                                    <div class="history-stat">
+                                        <div class="history-stat-value">${Math.round(item.mean)}ms</div>
+                                        <div class="history-stat-label">Average</div>
+                                    </div>
+                                    <div class="history-stat">
+                                        <div class="history-stat-value">${Math.round(item.min)}ms</div>
+                                        <div class="history-stat-label">Best</div>
+                                    </div>
+                                    <div class="history-stat">
+                                        <div class="history-stat-value">${Math.round(item.max)}ms</div>
+                                        <div class="history-stat-label">Worst</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                
+                this.historyModal.classList.add('visible');
+            }
+            
+            hideHistory() {
+                this.historyModal.classList.remove('visible');
+            }
+            
+            showHelp() {
+                this.helpModal.classList.add('visible');
+            }
+            
+            hideHelp() {
+                this.helpModal.classList.remove('visible');
+            }
+            
+            async handleClick() {
+                switch (this.state) {
+                    case 'welcome':
+                        this.startCountdown(true);
+                        break;
+                        
+                    case 'practice_waiting':
+                        clearTimeout(this.timeoutId);
+                        this.state = 'practice_early';
+                        this.testArea.className = 'bg-early';
+                        this.sounds.playError();
+                        await this.updateText('Too soon!', "Let's try the practice again. Tap to restart.");
+                        break;
+                        
+                    case 'practice_early':
+                        this.startCountdown(true);
+                        break;
+                        
+                    case 'practice_cue':
+                        const rtPractice = performance.now() - parseFloat(this.testArea.dataset.stimulusTime);
+                        this.state = 'practice_result';
+                        this.testArea.className = 'bg-start';
+                        await this.updateText(`${Math.round(rtPractice)} ms`, "Nice! Tap when you're ready to start the real test.");
+                        break;
+                        
+                    case 'practice_result':
+                        this.startCountdown(false);
+                        break;
+                        
+                    case 'countdown':
+                        return;
+                        
+                    case 'waiting':
+                        clearTimeout(this.timeoutId);
+                        this.state = 'early';
+                        this.testArea.className = 'bg-early';
+                        this.sounds.playError();
+                        await this.updateText('Too soon!', 'Press to try this trial again.');
+                        break;
+                        
+                    case 'early':
+                        this.startCountdown(false);
+                        break;
+                        
+                    case 'cue':
+                        const rtReal = performance.now() - parseFloat(this.testArea.dataset.stimulusTime);
+                        this.reactionTimes.push(rtReal);
+                        this.updateProgressBar();
+                        
+                        if (this.reactionTimes.length >= this.TOTAL_TRIALS) {
+                            this.showReport();
+                        } else {
+                            this.startCountdown(false);
+                        }
+                        break;
+                }
             }
         }
         
-        testArea.addEventListener('pointerdown', handleClick);
-        retestButton.addEventListener('click', initializeTest);
-
-        initializeTest();
+        // Initialize the application
+        const app = new ReactionTimeTest();
     });
     </script>
 </body>
